@@ -5,55 +5,55 @@ const axios = require('axios');
 const app = express();
 app.use(bodyParser.json());
 
-const VERIFY_TOKEN = 'my_verify_token';
-const MATRIX_WEBHOOK_URL = 'https://your-matrix-webhook.url'; // ← смени това по-късно
+const VERIFY_TOKEN = 'my_verify_token';  // Постави своя verify token
+const MATRIX_WEBHOOK_URL = 'https://your-matrix-webhook.url';  // Тук постави своя Matrix webhook URL
 
 // Проверка на Facebook webhook
 app.get('/webhook', (req, res) => {
-    console.log("Получаваме GET заявка за верификация от Facebook Webhook");  // Лог за проверка на GET заявката
+    console.log('🚀 Получаваме GET заявка за верификация');
     if (req.query['hub.verify_token'] === VERIFY_TOKEN) {
-        console.log("Токенът е валиден, връщаме challenge");
+        console.log('✔️ Верификация успешна');
         res.send(req.query['hub.challenge']);
     } else {
-        console.log("Невалиден токен");
+        console.log('❌ Верификация неуспешна');
         res.sendStatus(403);
     }
 });
 
 // Получаване на съобщения
 app.post('/webhook', async (req, res) => {
-    console.log("Получихме POST заявка от Facebook Webhook");  // Лог за получаване на събитие
+    console.log('🚀 Получаваме POST заявка');
     const body = req.body;
+    console.log('Събитие от Facebook:', JSON.stringify(body, null, 2));
 
     if (body.object === 'page') {
-        console.log("Обработваме събитие от страница");  // Лог за обработване на събитие от страница
-
         for (const entry of body.entry) {
             const event = entry.messaging[0];
             const message = event.message?.text || '[няма текст]';
             const sender = event.sender.id;
 
-            console.log(`Получено съобщение от ${sender}: ${message}`);  // Лог на съобщението и ID на изпращача
+            // Логваме полученото съобщение
+            console.log(`💬 Получено съобщение от ${sender}: ${message}`);
 
-            // Изпращане на съобщение към Matrix Webhook
             try {
-                const response = await axios.post(MATRIX_WEBHOOK_URL, {
+                // Изпращаме съобщението към Matrix Webhook URL
+                await axios.post(MATRIX_WEBHOOK_URL, {
                     sender,
                     message
                 });
-                console.log(`Съобщението е изпратено успешно към Matrix: ${response.status}`);
+                console.log('✔️ Съобщението успешно изпратено към Matrix');
             } catch (error) {
-                console.log("Грешка при изпращане на съобщение към Matrix:", error);
+                console.log('❌ Грешка при изпращане на съобщението към Matrix:', error.message);
             }
         }
         res.status(200).send('EVENT_RECEIVED');
     } else {
-        console.log("Невалидно събитие: не е събитие от страница.");
+        console.log('❌ Неочаквано събитие');
         res.sendStatus(404);
     }
 });
 
-app.listen(3000, () => {
-    console.log('✅ Сървърът работи на порт 3000');
+const port = process.env.PORT || 3000;
+app.listen(port, () => {
+    console.log(`✅ Сървърът работи на порт ${port}`);
 });
-
