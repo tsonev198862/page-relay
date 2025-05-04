@@ -5,8 +5,8 @@ const axios = require('axios');
 const app = express();
 app.use(bodyParser.json());
 
-const VERIFY_TOKEN = 'my_verify_token';  // Постави своя verify token
-const MATRIX_WEBHOOK_URL = 'https://your-matrix-webhook.url';  // Тук постави своя Matrix webhook URL
+const VERIFY_TOKEN = 'my_verify_token';  // Трябва да замениш с твоя verify token от Facebook
+const MATRIX_WEBHOOK_URL = 'https://your-matrix-webhook.url';  // Трябва да замениш с Matrix Webhook URL
 
 // Проверка на Facebook webhook
 app.get('/webhook', (req, res) => {
@@ -20,7 +20,7 @@ app.get('/webhook', (req, res) => {
     }
 });
 
-// Получаване на съобщения
+// Получаване на съобщения от Facebook
 app.post('/webhook', async (req, res) => {
     console.log('🚀 Получаваме POST заявка');
     const body = req.body;
@@ -31,12 +31,10 @@ app.post('/webhook', async (req, res) => {
             const event = entry.messaging[0];
             const message = event.message?.text || '[няма текст]';
             const sender = event.sender.id;
-
-            // Логваме полученото съобщение
             console.log(`💬 Получено съобщение от ${sender}: ${message}`);
 
+            // Изпращаме съобщението към Matrix Webhook URL
             try {
-                // Изпращаме съобщението към Matrix Webhook URL
                 await axios.post(MATRIX_WEBHOOK_URL, {
                     sender,
                     message
@@ -53,7 +51,7 @@ app.post('/webhook', async (req, res) => {
     }
 });
 
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 3000;  // Използваме порт от Render или по подразбиране 3000
 app.listen(port, () => {
     console.log(`✅ Сървърът работи на порт ${port}`);
 });
